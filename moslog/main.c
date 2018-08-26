@@ -16,7 +16,7 @@
 const char * CMD_NAME = "moslog";
 
 void usage() {
-    fprintf(stderr,"\
+    fprintf(stderr,"\n\
 %s: a command line tool to log text messages on the OS X logging system (os_log).\n\
 \n\
 Usage: %s [-h] [-s <subsystem>] [-c <category>] [-l <level>] [-f <file>] [<message> ...]\n\
@@ -42,9 +42,9 @@ int main(int argc, char * const argv[]) {
     long fs;
     char * subsystem = NULL;
     char * category = NULL;
-    os_log_type_t level = OS_LOG_TYPE_DEFAULT;
-    
     char * message = NULL;
+    
+    os_log_type_t level = OS_LOG_TYPE_DEFAULT;
     
     while ((ch = getopt(argc, argv, "l:s:c:f:h")) != -1) {
         switch (ch) {
@@ -74,7 +74,7 @@ int main(int argc, char * const argv[]) {
                 fseek(fd, 0L, SEEK_END);
                 fs = ftell(fd);
                 rewind(fd);
-                message = malloc(fs + 1);
+                message = (char*) malloc((fs + 1) * sizeof(char));
                 fread(message, fs, 1, fd);
                 fclose(fd);
                 break;
@@ -91,19 +91,20 @@ int main(int argc, char * const argv[]) {
     argc -= optind;
     argv += optind;
     
-    if( argc > 0 && message == NULL){
+    if( argc > 0 && message == NULL) {
         fs = 0;
         for(int i = 0; i < argc; i++){
             fs += strlen(argv[i]) +1 ;
         }
-        message = malloc(fs + 1);
+        message = (char*) malloc((fs + 1) * sizeof(char));
         for(int i = 0; i < argc; i++){
             strcat(message, argv[i]);
             strcat(message," ");
         }
-    } else  {
-        //
+    } else {
+        // nope
     }
+    
     if(message == NULL){
         usage();
         exit(0);
@@ -136,8 +137,8 @@ int main(int argc, char * const argv[]) {
     }
     printf(" level %s.\n", os_log_type_enabled(log, level) ? "enabled" : "disabled");
 #endif
-
-    os_log_with_type(log, level, "%s\n", message);
+    
+    os_log_with_type(log, level, "%{public}s\n", message);
     
     free(message);
     return 0;
